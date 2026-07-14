@@ -1,0 +1,641 @@
+openapi: 3.0.3
+info:
+  title: AI Reading & Learning Hub API
+  description: >
+    OpenAPI Specification สำหรับ Custom Backend Services ของ AI Reading & Learning Hub (PoC)
+    ครอบคลุม Content, AI Summary, Annotation, Progress Tracking, Search, และ Subscription & Billing Service.
+    Auth ใช้ Supabase Auth โดยตรง (ไม่รวมใน Spec นี้) — ทุก Endpoint ด้านล่างต้องแนบ Bearer Token ที่ได้จาก Supabase Auth
+  version: "0.1.0-poc"
+  contact:
+    name: AI Reading & Learning Hub Team
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production (ตัวอย่าง — เปลี่ยนเป็น URL จริงตอน Deploy)
+  - url: http://localhost:3000/v1
+    description: Local development
+
+tags:
+  - name: Content
+    description: อัปโหลด/จัดการเนื้อหา (PDF, EPUB, Article Link)
+  - name: AI Summary
+    description: สร้างสรุปเนื้อหาด้วย Claude API และจัดการโควตา Fair-use
+  - name: Annotation
+    description: Highlight และ Note
+  - name: Progress
+    description: ติดตามความคืบหน้าการอ่านและเป้าหมาย
+  - name: Search
+    description: ค้นหาความรู้แบบ Keyword
+  - name: Billing
+    description: Subscription, Free Trial, และการชำระเงินผ่าน 2C2P
+
+security:
+  - bearerAuth: []
+
+paths:
+  /content/upload:
+    post:
+      tags: [Content]
+      summary: อัปโหลดไฟล์ PDF/EPUB
+      description: รับไฟล์ อัปโหลดเข้า Storage แล้วสกัดข้อความ จากนั้นส่งต่อให้ AI Summary Service โดยอัตโนมัติ
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        "201":
+          description: อัปโหลดสำเร็จ เนื้อหาถูกบันทึกในสถานะ "รอสรุป"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Content"
+        "400":
+          description: ไฟล์ไม่ถูกต้องหรือสกัดข้อความไม่ได้
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /content/from-url:
+    post:
+      tags: [Content]
+      summary: เพิ่มบทความจากลิงก์เว็บ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/article-123"
+              required: [url]
+      responses:
+        "201":
+          description: ดึงเนื้อหาและบันทึกสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Content"
+        "422":
+          description: ดึงเนื้อหาจาก URL ไม่สำเร็จ (เว็บบล็อกการดึงข้อมูล หรือ URL ใช้งานไม่ได้)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /content/library:
+    get:
+      tags: [Content]
+      summary: ดึงรายการเนื้อหาทั้งหมดของผู้ใช้ (Library)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending_summary, summarized, all]
+          description: กรองตามสถานะการสรุป
+      responses:
+        "200":
+          description: รายการเนื้อหาทั้งหมด
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Content"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /content/{id}:
+    delete:
+      tags: [Content]
+      summary: ลบเนื้อหา
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+      responses:
+        "204":
+          description: ลบสำเร็จ
+        "404":
+          description: ไม่พบเนื้อหา
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /ai/summarize:
+    post:
+      tags: [AI Summary]
+      summary: สร้าง AI Summary สำหรับเนื้อหาที่ระบุ
+      description: >
+        ตรวจสอบโควตา Fair-use ก่อนเรียก Claude API — ถ้าต่ำกว่า 18 ครั้ง/เดือน ดำเนินการปกติ,
+        ถ้า 18-24 ครั้ง แจ้งเตือนใกล้ครบโควตาแล้วดำเนินการต่อ, ถ้าครบ 25 ครั้งแล้ว จะตอบ 429
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content_id:
+                  type: string
+                  format: uuid
+              required: [content_id]
+      responses:
+        "200":
+          description: สรุปสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Summary"
+        "429":
+          description: ครบโควตา Fair-use Soft Cap (25 ครั้ง/เดือน) แล้ว
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Claude API Error/Timeout (ระบบจะ Retry อัตโนมัติ 1 ครั้งก่อนตอบ Error นี้)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /ai/quota:
+    get:
+      tags: [AI Summary]
+      summary: เช็คโควตา AI Summary คงเหลือของเดือนนี้
+      responses:
+        "200":
+          description: ข้อมูลโควตาปัจจุบัน
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiQuota"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /annotations/highlight:
+    post:
+      tags: [Annotation]
+      summary: สร้าง Highlight ใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HighlightInput"
+      responses:
+        "201":
+          description: สร้าง Highlight สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Highlight"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /annotations/note:
+    post:
+      tags: [Annotation]
+      summary: สร้าง Note ผูกตำแหน่งอ้างอิง
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: สร้าง Note สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /annotations/{content_id}:
+    get:
+      tags: [Annotation]
+      summary: ดึง Highlight และ Note ทั้งหมดของเนื้อหารายการหนึ่ง
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: รายการ Highlight/Note
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  highlights:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Highlight"
+                  notes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /progress/{content_id}:
+    patch:
+      tags: [Progress]
+      summary: อัปเดตตำแหน่งการอ่านล่าสุด (ระบบคำนวณ % ให้อัตโนมัติ)
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                last_position:
+                  type: string
+                  description: ตำแหน่งล่าสุด เช่น page number หรือ scroll offset
+              required: [last_position]
+      responses:
+        "200":
+          description: อัปเดตความคืบหน้าสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Progress"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /dashboard:
+    get:
+      tags: [Progress]
+      summary: ดึงข้อมูลภาพรวม Dashboard (จำนวนที่อ่าน, เวลาที่ใช้, Streak, เป้าหมาย)
+      responses:
+        "200":
+          description: ข้อมูล Dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /goals:
+    post:
+      tags: [Progress]
+      summary: ตั้งเป้าหมายการอ่าน
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalInput"
+      responses:
+        "201":
+          description: ตั้งเป้าหมายสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /search:
+    get:
+      tags: [Search]
+      summary: ค้นหาความรู้ (Content + Highlight + Note) ด้วย Keyword
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "leadership"
+      responses:
+        "200":
+          description: ผลลัพธ์การค้นหา
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /billing/checkout:
+    post:
+      tags: [Billing]
+      summary: สร้างคำสั่งซื้อ Subscription ส่งไปยัง 2C2P
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan:
+                  type: string
+                  enum: [monthly, yearly]
+              required: [plan]
+      responses:
+        "200":
+          description: สร้างคำสั่งซื้อสำเร็จ พร้อม Redirect URL ไปยัง 2C2P
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url:
+                    type: string
+                    format: uri
+                  order_id:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /billing/webhook:
+    post:
+      tags: [Billing]
+      summary: รับผลการชำระเงินจาก 2C2P (Server-to-server callback)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Payload ตามรูปแบบของ 2C2P Webhook (อ้างอิงเอกสาร 2C2P โดยตรงตอน Implement จริง)
+      responses:
+        "200":
+          description: รับ Webhook สำเร็จ
+        "400":
+          description: Payload ไม่ถูกต้อง/Signature ไม่ตรง
+
+  /billing/cancel:
+    post:
+      tags: [Billing]
+      summary: ยกเลิก Subscription
+      responses:
+        "200":
+          description: ยกเลิกสำเร็จ (มีผลหลังจบรอบบิลปัจจุบัน)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /billing/status:
+    get:
+      tags: [Billing]
+      summary: เช็คสถานะ Subscription ปัจจุบันของผู้ใช้
+      responses:
+        "200":
+          description: สถานะปัจจุบัน
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT Token
+
+  parameters:
+    ContentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: ไม่ได้ Login หรือ Token หมดอายุ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    Content:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [pdf, epub, article]
+        title:
+          type: string
+        source_url:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending_summary, summarized]
+        created_at:
+          type: string
+          format: date-time
+
+    Summary:
+      type: object
+      properties:
+        content_id:
+          type: string
+          format: uuid
+        executive_summary:
+          type: string
+          description: สรุปแบบอ่านจบใน 5-10 นาที
+        key_takeaways:
+          type: array
+          items:
+            type: string
+        generated_at:
+          type: string
+          format: date-time
+
+    AiQuota:
+      type: object
+      properties:
+        used:
+          type: integer
+          example: 12
+        limit:
+          type: integer
+          example: 25
+        warning_threshold:
+          type: integer
+          example: 18
+        resets_at:
+          type: string
+          format: date-time
+
+    HighlightInput:
+      type: object
+      properties:
+        content_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        position:
+          type: string
+          description: ตำแหน่งอ้างอิง เช่น page/paragraph offset
+      required: [content_id, text, position]
+
+    Highlight:
+      allOf:
+        - $ref: "#/components/schemas/HighlightInput"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            created_at:
+              type: string
+              format: date-time
+
+    NoteInput:
+      type: object
+      properties:
+        content_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        position:
+          type: string
+      required: [content_id, text, position]
+
+    Note:
+      allOf:
+        - $ref: "#/components/schemas/NoteInput"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            created_at:
+              type: string
+              format: date-time
+
+    Progress:
+      type: object
+      properties:
+        content_id:
+          type: string
+          format: uuid
+        percent_complete:
+          type: number
+          format: float
+          example: 42.5
+        last_position:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    Dashboard:
+      type: object
+      properties:
+        total_items_read:
+          type: integer
+        total_hours_spent:
+          type: number
+        current_streak_days:
+          type: integer
+        active_goal:
+          $ref: "#/components/schemas/Goal"
+
+    GoalInput:
+      type: object
+      properties:
+        target_count:
+          type: integer
+          example: 4
+        period:
+          type: string
+          enum: [monthly]
+      required: [target_count, period]
+
+    Goal:
+      allOf:
+        - $ref: "#/components/schemas/GoalInput"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            progress_count:
+              type: integer
+
+    SearchResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [content, highlight, note]
+        content_id:
+          type: string
+          format: uuid
+        snippet:
+          type: string
+        matched_position:
+          type: string
+
+    BillingStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [trial, active, expired, cancelled]
+        trial_ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        plan:
+          type: string
+          enum: [monthly, yearly]
+          nullable: true
