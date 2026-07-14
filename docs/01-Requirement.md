@@ -114,7 +114,35 @@ AI สรุปอัตโนมัติ (Core Value: ช่วยอ่าน
 
 ---
 
-## 7. ทีมงานและงบประมาณ (PoC)
+## 7. สรุปหน้าจอที่ต้องมีในระบบ (Screen List)
+
+| # | หน้าจอ | คำอธิบาย | Module ที่เกี่ยวข้อง |
+|---|---|---|---|
+| 1 | Landing Page | หน้าแรกแนะนำแอป พร้อมปุ่มสมัคร/เข้าสู่ระบบ | Onboarding |
+| 2 | Sign Up | ฟอร์มสมัครสมาชิก (Email/Password) | Onboarding |
+| 3 | Email Verification | หน้าแจ้งให้ยืนยันอีเมล | Onboarding |
+| 4 | Login | ฟอร์มเข้าสู่ระบบ | Onboarding |
+| 5 | Forgot / Reset Password | ขอลิงก์รีเซ็ตรหัสผ่าน และหน้าตั้งรหัสผ่านใหม่ | Onboarding |
+| 6 | Onboarding Tutorial | แนะนำการใช้งานเบื้องต้นหลังสมัครครั้งแรก | Onboarding |
+| 7 | Dashboard (หน้าหลัก) | ภาพรวม: จำนวนที่อ่าน, เวลาที่ใช้, Streak, ความคืบหน้าเทียบเป้าหมาย | Progress Tracking |
+| 8 | Library (คลังเนื้อหา) | รายการเนื้อหาทั้งหมดของผู้ใช้ พร้อมสถานะ (รอสรุป/สรุปแล้ว) | Content Management |
+| 9 | Add Content | ฟอร์มเพิ่มเนื้อหา — อัปโหลดไฟล์ PDF/EPUB หรือวางลิงก์บทความ | Content Management |
+| 10 | Content Detail / Reading View | หน้าอ่านเนื้อหาต้นฉบับ พร้อม Highlight และเพิ่ม Note ระหว่างอ่าน | Reading & Annotation |
+| 11 | AI Summary View | แสดง Executive Summary + Key Takeaways ของเนื้อหานั้น (มักแสดงเป็นส่วนหนึ่งของ Content Detail) | AI Summarization |
+| 12 | Quota Warning / Notice | ข้อความแจ้งเตือนใกล้ครบ/ครบโควตา AI Summary รายเดือน (Modal หรือ Banner ไม่ใช่หน้าเต็ม) | AI Summarization |
+| 13 | Highlights & Notes (บันทึกของฉัน) | รวมรายการ Highlight/Note ทั้งหมดของผู้ใช้ ข้ามทุกเนื้อหา | Reading & Annotation |
+| 14 | Goal Setting | ตั้ง/แก้ไขเป้าหมายการอ่านรายเดือน | Progress Tracking |
+| 15 | Search Results | หน้าแสดงผลลัพธ์การค้นหา Keyword ข้ามเนื้อหา/Highlight/Note | Knowledge Retrieval |
+| 16 | Account Settings | จัดการโปรไฟล์, เปลี่ยนรหัสผ่าน, ตั้งค่าภาษา, เปิด/ปิดการแจ้งเตือน | Account |
+| 17 | Subscription / Billing | แสดงสถานะ Trial/Subscription ปัจจุบัน, เลือกแพ็กเกจ, ปุ่มยกเลิก | Account & Subscription |
+| 18 | Checkout (Redirect) | หน้า Redirect ไปชำระเงินผ่าน 2C2P (อยู่นอกระบบ ไม่ได้พัฒนาเอง) | Account & Subscription |
+| 19 | Trial Expiry Notice | แจ้งเตือนก่อน/หลัง Trial หมดอายุ พร้อม CTA ให้สมัครสมาชิก | Account & Subscription |
+| 20 | Cancel Subscription Confirmation | หน้ายืนยันก่อนยกเลิก Subscription | Account & Subscription |
+| 21 | 404 / Empty State | หน้าว่างเมื่อยังไม่มีเนื้อหา/ผลการค้นหา และหน้า Error ทั่วไป | ทุก Module |
+
+> หมายเหตุ: ตารางนี้นับเฉพาะหน้าจอฝั่งผู้ใช้ (Client) เท่านั้น ไม่รวม Admin เพราะทีมงานใช้ Supabase Studio ซึ่งเป็น Dashboard สำเร็จรูปที่ไม่ต้องออกแบบ/พัฒนา UI เอง (ตามที่ระบุไว้ใน Service Architecture Document)
+
+## 8. ทีมงานและงบประมาณ (PoC)
 
 **ทีมงานที่แนะนำ:**
 
@@ -139,7 +167,7 @@ AI สรุปอัตโนมัติ (Core Value: ช่วยอ่าน
 
 ---
 
-## 8. KPI ที่ต้องวัดผลระหว่าง PoC
+## 9. KPI ที่ต้องวัดผลระหว่าง PoC
 
 - อัตราการอัปโหลดเนื้อหาเฉลี่ยต่อผู้ใช้ (มีคนใช้งานจริงหรือไม่)
 - อัตราการเปิดอ่าน AI Summary ที่สร้างแล้ว (Feature หลักถูกใช้จริงหรือไม่)
@@ -150,7 +178,7 @@ AI สรุปอัตโนมัติ (Core Value: ช่วยอ่าน
 
 ---
 
-## 9. ผลการตัดสินใจล่าสุด (สัมภาษณ์รอบเพิ่มเติม)
+## 10. ผลการตัดสินใจล่าสุด (สัมภาษณ์รอบเพิ่มเติม)
 
 | ประเด็น | ผลสรุป | หมายเหตุ |
 |---|---|---|
@@ -160,6 +188,6 @@ AI สรุปอัตโนมัติ (Core Value: ช่วยอ่าน
 | Fair-use Soft Cap (AI Summary) | **25 ครั้ง/เดือน/ผู้ใช้** | ตามที่เสนอไว้เดิมในการคำนวณ Unit Economics |
 | การแจ้งเตือนก่อนถึง Soft Cap | **แจ้งเตือนตั้งแต่ครั้งที่ 18** | แจ้งล่วงหน้าก่อนถึง Cap 25 ครั้ง เพื่อให้ผู้ใช้ทราบล่วงหน้าและไม่รู้สึกถูกตัดใช้งานกะทันหัน |
 
-## 10. ประเด็นที่ยังต้องตัดสินใจเพิ่มเติม
+## 11. ประเด็นที่ยังต้องตัดสินใจเพิ่มเติม
 
 ไม่มีประเด็นค้างแล้ว — Requirement พร้อมส่งต่อให้ทีม Dev เริ่มพัฒนาได้
