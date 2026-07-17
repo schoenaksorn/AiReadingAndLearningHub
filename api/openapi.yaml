@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
-  title: AI Reading & Learning Hub API
+  title: QriboBook API
   description: >
-    OpenAPI Specification สำหรับ Custom Backend Services ของ AI Reading & Learning Hub (PoC)
+    OpenAPI Specification สำหรับ Custom Backend Services ของ QriboBook (PoC)
     ครอบคลุม Content, AI Summary, Annotation, Progress Tracking, Search, และ Subscription & Billing Service.
     Auth ใช้ Supabase Auth โดยตรง (ไม่รวมใน Spec นี้) — ทุก Endpoint ด้านล่างต้องแนบ Bearer Token ที่ได้จาก Supabase Auth
   version: "0.1.0-poc"
   contact:
-    name: AI Reading & Learning Hub Team
+    name: QriboBook Team
 
 servers:
   - url: https://api.example.com/v1
