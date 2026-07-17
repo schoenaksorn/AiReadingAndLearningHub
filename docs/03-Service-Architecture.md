@@ -1,4 +1,4 @@
-# AI Reading & Learning Hub — Service Architecture (PoC)
+# QriboBook — Service Architecture (PoC)
 
 เอกสารนี้แปลง Business Flow (9 Module) ให้เป็น Service ทางเทคนิคที่ชัดเจน เพื่อให้ทีม Dev รู้ว่าอะไร **ต้องเขียนเอง (Custom)** และอะไร **ใช้ของ Platform สำเร็จรูป (Managed)** — ลดการสร้าง Service ซ้ำซ้อนโดยไม่จำเป็น ตามหลักการควบคุมต้นทุนของ PoC
 

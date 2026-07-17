@@ -1,4 +1,4 @@
-# AI Reading & Learning Hub — Lean PoC Scope
+# QriboBook — Lean PoC Scope
 
 ## Pain Point ที่ต้องแก้
 - ซื้อหนังสือเยอะ แต่ไม่ได้อ่าน

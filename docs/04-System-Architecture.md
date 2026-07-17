@@ -1,4 +1,4 @@
-# AI Reading & Learning Hub — System Architecture (PoC)
+# QriboBook — System Architecture (PoC)
 
 เอกสารนี้สรุปภาพรวมสถาปัตยกรรมทั้งระบบ ผนวกทุกการตัดสินใจจากเอกสารก่อนหน้า (Requirement, Business Flow, Service Architecture, OpenAPI, Database Design) ให้เห็นเป็นภาพเดียว
 

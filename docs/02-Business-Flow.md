@@ -1,4 +1,4 @@
-# AI Reading & Learning Hub — Business Flow (PoC)
+# QriboBook — Business Flow (PoC)
 
 เอกสารนี้อธิบาย Business Flow และ Use Case ของแต่ละ Module ตาม Scope ที่กำหนดไว้ใน Requirement Document (PoC, Web-only)
 
