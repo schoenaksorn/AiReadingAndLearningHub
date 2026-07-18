@@ -1,5 +1,5 @@
 -- ============================================================================
--- AI Reading & Learning Hub — Initial Database Schema (PoC)
+-- QriboRead — Initial Database Schema (PoC)
 -- Target: PostgreSQL 15+ on Supabase
 -- ============================================================================
 -- หมายเหตุ: รันไฟล์นี้ผ่าน Supabase SQL Editor หรือ `supabase db push`
