@@ -1,4 +1,4 @@
-# QriboBook — Database Design (PoC)
+# QriboRead — Database Design (PoC)
 
 ออกแบบสำหรับ PostgreSQL บน Supabase — อ้างอิงจาก Service Architecture และ OpenAPI Specification ที่กำหนดไว้ก่อนหน้า
 

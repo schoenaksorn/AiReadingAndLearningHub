@@ -1,4 +1,4 @@
-# QriboBook — Requirement Document (PoC)
+# QriboRead — Requirement Document (PoC)
 
 ## 1. ภาพรวมโปรเจกต์
 
