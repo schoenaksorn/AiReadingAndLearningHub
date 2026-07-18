@@ -104,7 +104,7 @@
 
 | ตำแหน่ง | จำนวน | ลักษณะ |
 |---|---|---|
-| Full-stack Developer (Web + Supabase + Claude API) | 1–2 | Full-time |
+| Full-stack Developer (Web Frontend + Java/Spring Boot Backend + Supabase + Claude API) | 1–2 | Full-time |
 | UI/UX Designer | 1 | Freelance ครั้งเดียว |
 | Product/BA | 1 | เจ้าของโปรเจกต์ทำเอง |
 

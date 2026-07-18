@@ -9,7 +9,7 @@
 | Layer | เทคโนโลยีที่เลือก | เหตุผล |
 |---|---|---|
 | Frontend | Web App (Responsive) | ลดต้นทุน ไม่มีค่าคอมมิชชัน Store, ปล่อยอัปเดตได้ทันที |
-| Backend | Custom Backend Service (Node.js/TypeScript แนะนำ) + Supabase Edge Functions | เขียนเฉพาะ Logic ที่จำเป็น (Content, AI Summary, Notification, Billing) |
+| Backend | Custom Backend Service (**Java / Spring Boot**) เชื่อมต่อ Supabase ผ่าน JDBC/REST | เขียนเฉพาะ Logic ที่จำเป็น (Content, AI Summary, Notification, Billing) |
 | Database | Supabase (PostgreSQL) | Auth + DB + Storage + Full-text Search ในตัวเดียว |
 | Authentication | Supabase Auth | ไม่ต้องสร้าง Auth Service เอง |
 | AI Provider | Claude API (Anthropic) | Hallucination ต่ำ เหมาะกับงานสรุปที่ต้องการความถูกต้อง |
@@ -30,7 +30,7 @@ flowchart TB
     end
 
     subgraph Backend["Backend Layer (Custom)"]
-        API[Backend API Server<br/>Node.js/TypeScript]
+        API[Backend API Server<br/>Java / Spring Boot]
         CONTENTSVC[Content Service]
         AISVC[AI Summary Service]
         NOTISVC[Notification Service]
@@ -91,6 +91,8 @@ flowchart TB
 
 ### 3.2 Backend API Server
 - เป็น Service กลางที่รวม 4 Custom Service (Content, AI Summary, Notification, Billing) ไว้ในโปรเจกต์เดียวสำหรับ PoC (Monolith) — ไม่จำเป็นต้องแยกเป็น Microservices จริงในเฟสนี้ เพราะ Scale ยังเล็ก
+- **เขียนด้วย Java (แนะนำ Spring Boot)** รันเป็น Standalone Service แยกจาก Supabase โดยเชื่อมต่อผ่าน JDBC (PostgreSQL Driver) สำหรับ Query ตรง หรือ Supabase REST API/Client Library สำหรับ Auth/Storage
+- **หมายเหตุ:** เดิมมีแผนใช้ Supabase Edge Functions ร่วมด้วย แต่ Edge Functions รองรับเฉพาะ Deno/TypeScript ไม่รองรับ Java จึงตัดออกจาก Stack — Logic ทั้งหมดย้ายมาอยู่ใน Java Backend Service เพียงจุดเดียวแทน ทำให้สถาปัตยกรรมเรียบง่ายขึ้น (มี Backend แค่ 1 จุดจริงๆ ไม่ต้องดูแล 2 Runtime)
 - ตรวจสอบ JWT Token ทุก Request (ยกเว้น Webhook Endpoint ที่ใช้ Signature Verification แทน)
 - เรียกใช้ Supabase ผ่าน Service Role Key สำหรับ Operation ที่ Client ไม่ควรทำเอง (เช่น อัปเดต Subscription)
 
@@ -208,7 +210,7 @@ flowchart LR
 | องค์ประกอบ | ที่แนะนำ | เหตุผล |
 |---|---|---|
 | Frontend Hosting | Vercel หรือ Netlify | Deploy ง่าย, Free Tier เพียงพอสำหรับ PoC, รองรับ CI/CD จาก Git อัตโนมัติ |
-| Backend Hosting | Railway หรือ Render | Deploy Node.js Service ง่าย ราคาประหยัด เหมาะกับทีมเล็ก |
+| Backend Hosting | Railway หรือ Render (Deploy ผ่าน Docker) | รองรับ Java/Spring Boot ผ่าน Docker Container ได้ปกติ ราคาประหยัด เหมาะกับทีมเล็ก |
 | Database/Storage/Auth | Supabase Cloud | ตามที่ตัดสินใจไว้แล้ว |
 | Domain/SSL | ผูกกับ Vercel/Netlify (SSL ออกให้อัตโนมัติ) | ไม่มีค่าใช้จ่ายเพิ่ม |
 | Environment | แยก `staging` และ `production` อย่างน้อย 2 Environment | ป้องกันทดสอบ Feature ใหม่กระทบผู้ใช้จริง โดยเฉพาะ Billing |

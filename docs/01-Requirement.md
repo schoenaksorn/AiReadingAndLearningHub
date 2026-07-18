@@ -96,7 +96,7 @@
 
 ## 4. Non-Functional Requirements
 
-- **สถาปัตยกรรม:** ใช้ Backend-as-a-Service (Supabase หรือ Firebase) เพื่อลดต้นทุนทีมและเวลาพัฒนา
+- **สถาปัตยกรรม:** ใช้ Supabase (Backend-as-a-Service) สำหรับ Database/Auth/Storage เพื่อลดต้นทุนทีมและเวลาพัฒนา ส่วน Business Logic เขียนด้วย Java (Spring Boot) เป็น Backend Service แยกต่างหาก
 - **AI Integration:** เรียก LLM API ตรงด้วย Prompt พื้นฐานสำหรับ AI Summary — ไม่ต้องมี RAG/Vector DB ใน PoC นี้
 - **Performance:** ต้องมีการแจ้งสถานะระหว่างประมวลผล AI Summary (Loading state) เพราะใช้เวลาสร้างสรุปหลายวินาที
 - **Data Retention:** ข้อมูลผูกกับบัญชีผู้ใช้บน Cloud ตั้งแต่ต้น (ไม่มีความเสี่ยงข้อมูลสูญหายจากการเปลี่ยนอุปกรณ์ เพราะเป็น Web ไม่ใช่ Local Storage)
@@ -172,7 +172,7 @@ AI สรุปอัตโนมัติ (Core Value: ช่วยอ่าน
 
 | ตำแหน่ง | จำนวน | ลักษณะ |
 |---|---|---|
-| Full-stack Developer (Web + Supabase/Firebase + LLM API) | 1–2 | Full-time |
+| Full-stack Developer (Web Frontend + **Java/Spring Boot Backend** + Supabase + Claude API) | 1–2 | Full-time |
 | UI/UX Designer | 1 | Freelance ครั้งเดียว |
 | Product/BA | 1 | เจ้าของโปรเจกต์ทำเอง |
 

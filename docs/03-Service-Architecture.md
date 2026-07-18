@@ -40,7 +40,7 @@
   - `POST /content/from-url` — รับ URL ดึงเนื้อหาเว็บ (Web Scraping)
   - `GET /content/library` — ดึงรายการเนื้อหาทั้งหมดของผู้ใช้
   - `DELETE /content/:id` — ลบเนื้อหา
-- **Dependency:** ต้องใช้ Library สกัดข้อความ PDF (เช่น pdf-parse) และ Web Scraping (เช่น Cheerio/Readability)
+- **Dependency:** ต้องใช้ Library สกัดข้อความ PDF (เช่น **Apache PDFBox**) และ Web Scraping/HTML Parsing (เช่น **Jsoup**)
 
 ### 3. AI Summary Service
 - **Module ที่เกี่ยวข้อง:** Module 3 (AI Summarization)
